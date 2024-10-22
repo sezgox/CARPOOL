@@ -103,7 +103,6 @@ ConductoresRoute.MapGet("/", () =>
 ConductoresRoute.MapPost("/{conductorId:int}/viajes", (int conductorId,Viaje viaje) =>
 {
     viaje.id = nextViajeId++;
-    Console.WriteLine(viaje.origen);
     viaje.estado = EstadoViaje.ESPERANDO;
     viaje.pasajeros = 0;
     Conductor conductor = conductores.Find(conductor => conductor.id == conductorId);
@@ -208,10 +207,15 @@ PeticionesRoute.MapPut("/", (Peticion peticion) =>
         }
         else
         {
-            return Results.Problem("No se puede cancelar esta petición. Viaje en curso o terminado.");
+            return Results.BadRequest("No se puede cancelar esta petición. Viaje en curso o terminado.");
         }
+    }else if(peticion.estado == EstadoPeticion.CANCELADA)
+    {
+        return Results.BadRequest("Peticion ya está cancelada");
     }
     peticion.CancelarPeticion();
+    peticiones = peticiones.FindAll(peticion => peticion.id != peticionId);
+    peticiones.Add(peticion);
     return Results.Ok(peticion);
 });
 
@@ -226,7 +230,7 @@ void ActualizarPeticionesViaje(Conductor conductor)
         viaje.peticiones = [];
         foreach (Peticion peticion in peticiones)
         {
-            if (peticion.origen == viaje.origen && peticion.destino == viaje.destino && peticion.pasajeros < (viaje.maxCapacidad - viaje.pasajeros) && viaje.estado == EstadoViaje.ESPERANDO && peticion.estado == EstadoPeticion.ESPERANDO)
+            if (peticion.origen == viaje.origen && peticion.destino == viaje.destino && peticion.pasajeros <= (viaje.maxCapacidad - viaje.pasajeros) && viaje.estado == EstadoViaje.ESPERANDO && peticion.estado == EstadoPeticion.ESPERANDO)
             {
                 viaje.peticiones.Add(peticion);
             }
