@@ -10,7 +10,7 @@ export interface Viaje{
   id?: number,
   conductorId?: number,
   peticiones?: Peticion[],
-  estado: string
+  estado?: string
 }
 
 export interface Peticion{
@@ -19,7 +19,8 @@ export interface Peticion{
   pasajeros:number,
   nombre:string,
   id?: number,
-  viajeId?: number
+  viajeId?: number,
+  estado?: string
 }
 
 export interface Conductor{
@@ -49,6 +50,10 @@ export class RestService {
 
   getConductores():Observable<Conductor[]>{
     return this.http.get<Conductor[]>(`${this.url}${this.conductores}`);
+  }
+
+  getPeticiones():Observable<Peticion[]>{
+    return this.http.get<Peticion[]>(`${this.url}${this.peticiones}`);
   }
 
   addViaje(conductorId: number, datosViaje:Viaje){
