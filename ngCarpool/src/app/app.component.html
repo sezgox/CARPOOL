@@ -1,0 +1,149 @@
+
+<main class="grid grid-cols-2 gap-10 p-8">
+
+  <section>
+    <h2 class="font-bold text-2xl">Viajes disponibles</h2>
+    <div  class="grid gap-10 mt-20 grid-cols-4">
+      @for (viaje of viajes; track $index) {
+        <div class="outline-2 outline outline-blue-500 p-4">
+          <h4 class="font-semibold">Origen: <span class="font-light">{{viaje.origen}}</span></h4>
+          <h4 class="font-semibold">Destino: <span class="font-light"> {{viaje.destino}}</span></h4>
+          @if(viaje.estado == 'ESPERANDO'){
+            <h4 class="font-semibold">Vacantes: <span class="font-light">{{viaje.maxCapacidad - viaje.pasajeros}}</span></h4>
+          }
+          <h4 class="font-semibold">Estado: <span class="font-light">{{viaje.estado}}</span></h4>
+
+        </div>
+      }@empty {
+        <p class="font-medium">No se han encontrado viajes todavia...</p>
+      }
+    </div>
+   
+  </section>
+
+  <section>
+    <h2 class="font-bold text-2xl">Conductores</h2>
+    <div class="grid gap-10 mt-20 grid-cols-1">
+      @for (con of conductores; track $index) {
+        <div class="outline-2 outline outline-red-500 p-4">
+          <h4 class="font-semibold mb-3">{{con.nombre}}</h4>
+          @for (viaje of con.viajes; track $index) {
+            @if(viaje.estado != 'TERMINADO'){
+              <p class="mb-2 flex font-semibold">{{viaje.origen}} -> {{viaje.destino}} 
+                <span class="ml-auto">
+                  <button 
+                  class="px-2 py-1 bg-yellow-300 rounded-md mr-2 hover:bg-yellow-400" 
+                  [class.disabled]="viaje.peticiones?.length == 0" 
+                  (click)="accionViaje(viaje.id ?? 0,con.id,'aceptar')">Aceptar siguiente</button> 
+                 @if(viaje.estado == 'ESPERANDO'){
+                  <button 
+                  class="px-2 py-1 bg-green-400 hover:bg-green-500 rounded-md" 
+                  [class.disabled]="viaje.pasajeros == 0"
+                  (click)="accionViaje(viaje.id ?? 0,con.id,'viajar')">Viajar</button>
+                 }@else if(viaje.estado == 'VIAJANDO'){
+                  VIAJANDO...
+                 }
+                  </span></p>
+              @if (viaje.peticiones && viaje.peticiones.length > 0) {
+                <h4 class="underline mb-2 font-semibold">Peticiones</h4>
+                @for (pet of viaje.peticiones; track $index) {
+                  <p class="font-medium">Usuario: <span class="font-light">{{pet.nombre}}</span></p>
+                  <p class="mb-8 font-medium">Pasajeros: <span class="font-light">{{pet.pasajeros}}</span></p>
+                }
+              }
+            }
+          }@empty {
+            <p class="font-medium">No se han encontrado viajes todavia...</p>
+          }
+        </div>
+      }
+    </div>
+
+  </section>
+
+  <section class="w-[100%]">
+    <h2 class="font-bold text-2xl mb-8">Nueva solicitud</h2>
+    <form action="" class="m-auto w-[100%] flex gap-8 flex-col">
+      <div class="grid grid-cols-4 gap-4">
+        <label class="font-semibold" for="nombre">Nombre</label>
+        <label class="font-semibold" for="origen">Origen</label>
+        <label class="font-semibold" for="destino">Destino</label>
+        <label class="font-semibold" for="pasajeros">Pasajeros</label>
+        <input type="text" name="nombre" [(ngModel)]="nombre" id="nombre" class="px-2 py-1 outline outline-2 outline-gray-500 focus:outline-gray-700 rounded" placeholder="John Doe" >
+        <select name="origen" id="origen" name="origen" [(ngModel)]="origen" class="px-2 py-1 outline outline-2 outline-gray-500 focus:outline-gray-700 rounded" (change)="updateDestino(origen,'peticion')">
+          <option value="" disabled selected>Ciudad origen</option>
+          @for(ciudad of ciudades; track $index){
+            <option value="{{ciudad}}">{{ciudad}}</option>
+          }
+        </select>
+        <select name="destino" id="destino" name="destino" [(ngModel)]="destino" [disabled]="origen == ''" class="px-2 py-1 outline outline-2 outline-gray-500 focus:outline-gray-700 rounded">
+          <option value="" disabled selected>Ciudad destino</option>
+          @for(ciudad of ciudadesDestino(); track $index){
+              <option value="{{ciudad}}">{{ciudad}}</option>
+          }
+        </select>
+        <input type="number" min="1" max="10" name="pasajeros" [(ngModel)]="pasajeros" id="pasajeros" class="px-2 py-1 outline outline-2 outline-gray-500 focus:outline-gray-700 rounded">
+      </div>
+
+      <button class="px-2 py-1 bg-red-400 hover:bg-red-500 rounded-md" (click)="sendSol()" [class.disabled]="pasajeros == 0 || destino == '' || origen == '' || nombre == ''">Enviar</button>
+    </form>
+  </section>
+
+  <section class="flex flex-col">
+    <h2 class="font-bold text-2xl mb-8">Solicitudes</h2>
+    <div class="grid grid-cols-6 gap-y-4 items-center">
+      <h4 class="font-semibold">Nombre</h4>
+      <h4 class="font-semibold">Origen</h4>
+      <h4 class="font-semibold">Destino</h4>
+      <h4 class="font-semibold">Pasajeros</h4>
+      <h4 class="font-semibold">Estado</h4>
+      <h4></h4>
+    @for (pet of peticiones; track $index) {
+        <span>{{pet.nombre}}</span> 
+        <span>{{pet.origen}}</span>
+        <span>{{pet.destino}}</span>
+        <span>{{pet.pasajeros}}</span>
+        <span>{{pet.estado}}</span>
+        <button class="px-2 py-1 bg-red-600 hover:bg-red-700 rounded-md" (click)="cancelarPeticion(pet)">Cancelar</button>
+    }
+    </div>
+  </section>
+
+  <section>
+    <h2 class="font-bold text-2xl mb-8">Nuevo viaje</h2>
+    <form action="" class="m-auto w-[100%] flex gap-8 flex-col">
+      <div class="grid grid-cols-4 gap-4">
+        <label class="font-semibold" for="conductor">Conductor</label>
+        <label class="font-semibold" for="origen">Origen</label>
+        <label class="font-semibold" for="destino">Destino</label>
+        <label class="font-semibold" for="pasajeros">MaxCapacidad</label>
+        <select name="conductor" id="conductor" [(ngModel)]="conductor" class="px-2 py-1 outline outline-2 outline-gray-500 focus:outline-gray-700 rounded">
+          <option value="0" disabled selected>Conductor</option>
+          @for (con of conductores; track $index) {
+            <option value="{{con.id}}">{{con.nombre}}</option>
+          }
+        </select>
+        <select name="origenViaje" id="origenViaje" name="origenViaje" [(ngModel)]="origenViaje" class="px-2 py-1 outline outline-2 outline-gray-500 focus:outline-gray-700 rounded" (change)="updateDestino(origenViaje,'viaje')">
+          <option value="" disabled selected>Ciudad origen</option>
+          @for(ciudad of ciudades; track $index){
+            <option value="{{ciudad}}">{{ciudad}}</option>
+          }
+        </select>
+        <select name="destinoViaje" id="destinoViaje" name="destinoViaje" [(ngModel)]="destinoViaje" [disabled]="origenViaje == ''" class="px-2 py-1 outline outline-2 outline-gray-500 focus:outline-gray-700 rounded">
+          <option value="" disabled selected>Ciudad destino</option>
+          @for(ciudad of ciudadesDestinoViaje(); track $index){
+              <option value="{{ciudad}}">{{ciudad}}</option>
+          }
+        </select>
+        <input type="number" min="1" max="10" name="maxCapacidad" [(ngModel)]="maxCapacidad" id="pasajeros" class="px-2 py-1 outline outline-2 outline-gray-500 focus:outline-gray-700 rounded">
+      </div>
+
+      <button class="px-2 py-1 bg-red-400 hover:bg-red-500 rounded-md" (click)="addViaje()" [class.disabled]="maxCapacidad == 0 || destinoViaje == '' || origenViaje == '' || conductor == 0">Enviar</button>
+    </form>
+  </section>
+  @if(error.state){
+    <span class="absolute top-0 left-0 right-0 bottom-0 min-w-[20vw] p-4 bg-black text-yellow-300 max-w-[30vw] m-auto h-[fit-content] rounded-lg text-center">{{error.msg}}</span>
+  }
+</main>
+
+<router-outlet />
